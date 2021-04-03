@@ -1,53 +1,29 @@
 import os
-import requests
-from bs4 import BeautifulSoup
+from babel.numbers import format_currency
+from extract_currency import get_country_currency
+from get_input import get_input
+from convert_currency import convert_currency
 
-def get_table_row(url):
-  result = requests.get(url)
-  soup= BeautifulSoup(result.text,"html.parser")
+os.system("clear")
 
-  table = soup.find("table",{"class":"table"})
-  return table.find("tbody").find_all("tr")
+"""
+Use the 'format_currency' function to format the output of the conversion
+format_currency(AMOUNT, CURRENCY_CODE, locale="ko_KR" (no need to change this one))
+"""
 
-def extract_country_currency(html):
-  table_col=html.find_all("td")
-  country_name=table_col[0].get_text()
-  currency_code=table_col[2].get_text()
-  return({"country":country_name, "currency":currency_code})
 
 def show_interface(country_currency):
-  print("Hello! Please choose a country by number: ")
-
   country_length = len(country_currency)
   for i in range(country_length):
     print(f"# {i+1} {country_currency[i]['country']}")
 
-  
-  while 1:
-    try:
-      inp = int(input("#: "))
-      if inp > country_length or inp< 1:
-        print("Choose a number from the list.")
-      else:
-        print(f"you chose {country_currency[inp-1]['country']}")
-        print(f"The currency code is {country_currency[inp-1]['currency']}")
-        break
-    except:
-      print("That wasn's a number.")
-
 def main():
-  os.system("clear")
-  url = "https://www.iban.com/currency-codes"
 
-  table_row = get_table_row(url)
-
-  country_currency=[]
-  for tr in table_row:
-    country_currency.append(extract_country_currency(tr))
-
+  country_currency = get_country_currency()
   show_interface(country_currency)
-  
+  inputs = get_input(country_currency)
+  amounts = convert_currency(inputs)
+  if amounts is not None:
+    print(f"{format_currency(amounts['from_amount'], amounts['from_cur'], locale='ko_KR')} is {format_currency(amounts['to_amount'], amounts['to_cur'], locale='ko_KR')}")
 
 main()
-  
-
